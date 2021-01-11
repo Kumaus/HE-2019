@@ -8,6 +8,6 @@ Writeup: https://kumaus.github.io/HE2019-writeup/
 
 The challenges for this great event are currently not accessible, but will hopefully
 become so at some point. A lot of the older HE challenges are now hosted at
-https://he-archive.sieber.space/challenges.
+https://he-archive.sieber.space/.
 Many thanks to Philip Sieber for organizing this grand event every year!
 
