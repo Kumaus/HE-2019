@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="red">Egg 24: CAPTEG</h2>
+      <p class="problem_red">
+        CAPTEG - Completely Automated Turing test to know how many Eggs are in the Grid
+        <br>
+        CAPTEG is almost like a CAPTCHA. But here, you have to proof you are a 
+        bot that can count the eggs in the grid quickly. Bumper also wanna train his 
+        AI for finding eggs faster and faster ;)
+      </p>
+      <img src="img/picture1.jpg" style="height:150px; margin-left:10px;">
+      <img src="img/picture2.jpg" style="height:150px; margin-left:10px;">
+      <img src="img/picture3.jpg" style="height:150px; margin-left:10px;">
+      <img src="img/picture4.jpg" style="height:150px; margin-left:10px;">
+      <p>
+        This challenge throws sets of nine captcha pictures at you and expects 
+        you to count the eggs rapidly. As the description points out, the sensible 
+        way to do this is to train an AI. Trouble is ... I have no idea how to,
+        and finding out is likely to take lots of time. So I tried a more mundane
+        approach of matching images.
+      </p>
+      <p>
+        If the number of captcha images is reasonably small, one could try to collect
+        them all, hash them and build a captcha matching library. This failed 
+        miserably: there are simply too many egg images, all of which can appear in 
+        different rotations, and the captcha composition algorithm seems to lead 
+        to some pixel interpolation. So image hashing does not work.  
+      </p>
+      <p>
+        Enter the <b>OpenCV</b> image processing library, which offers fast template 
+        matching algorithms. Template matching works by sliding a template 
+        across a larger image and computing how well it matches at each position.
+        A number of different matching functions are available (for example least 
+        squares), each with strengths and weaknesses. The result is a 2D function,
+        whose minima show the best matches in the image.
+      </p>
+      <p>
+        The nice thing about easter eggs on grass is that they are relatively 
+        roundish, and that they have distinct colours. That makes egg matching with 
+        a limited template library feasible. I used a circular mask, started with 
+        one "average Joe" template egg of each colour and added more if eggs on 
+        captchas failed to match, or if there were false positives. Because the 
+        eggs are shiny, light reflections on the coloured eggs are pretty strong,
+        which can throw off the matching algorithm quite badly. 
+      </p>
+      <div>
+        <img src="img/mask.jpg">
+        <img src="img/templ/templ01.jpg">
+        <img src="img/templ/templ02.jpg">
+        <img src="img/templ/templ03.jpg">
+        <img src="img/templ/templ04.jpg">
+        <img src="img/templ/templ05.jpg">
+        <img src="img/templ/templ06.jpg">
+        <img src="img/templ/templ07.jpg">
+        <img src="img/templ/templ08.jpg">
+        <img src="img/templ/templ09.jpg">
+        <img src="img/templ/templ10.jpg">
+        <img src="img/templ/templ11.jpg">
+        <img src="img/templ/templ12.jpg">
+        <img src="img/templ/templ13.jpg">
+        <img src="img/templ/templ14.jpg">
+        <img src="img/templ/templ15.jpg">
+        <img src="img/templ/templ16.jpg">
+        <img src="img/templ/templ17.jpg">
+        <img src="img/templ/templ18.jpg">
+        <img src="img/templ/templ19.jpg">
+        <img src="img/templ/templ20.jpg">
+        <img src="img/templ/templ21.jpg">
+      </div>
+      <p>
+        The script below uses different matching threshold levels for each template,
+        the result of trial and error (training a non-artificial non-intelligence, 
+        in a way). After retrieving a new captcha from the server, it proceeds to 
+        test all templates for matches. Because several templates can match the same 
+        egg in multiple places, a test is made to insure that new matches are sufficiently
+        far away from established ones. In the testing/learning phase, results are 
+        visualized, and failed captchas are stored away for later checking, adding
+        new templates if necessary.
+      </p>
+      <pre class="prettyprint lang-py">
+import cv2 as cv
+import numpy as np
+from os import listdir
+import requests
+import time
+
+# Egg separation distance (squared)
+prox_threshold = 60**2
+# Matching threshold for each template
+match_threshold = {
+    "templ01.jpg": 120,
+    "templ02.jpg": 120,
+    "templ03.jpg": 120,
+    "templ04.jpg": 120,
+    "templ05.jpg": 140,
+    "templ06.jpg": 140,
+    "templ07.jpg": 140,
+    "templ08.jpg": 140,
+    "templ09.jpg": 140,
+    "templ10.jpg": 140,
+    "templ11.jpg": 120,
+    "templ12.jpg": 120,
+    "templ13.jpg": 120,
+    "templ14.jpg": 120,
+    "templ15.jpg": 120,
+    "templ16.jpg": 100,
+    "templ17.jpg": 100,
+    "templ18.jpg": 50,
+    "templ19.jpg": 50,
+    "templ20.jpg": 50,
+    "templ21.jpg": 50,
+}
+# Template directory
+templ_dir = "templ/"
+# collection of captchas where the count was wrong
+bad_captcha = "bad_egg/pic" + str(round(time.time())) + "_"
+
+def proximity(egg_x, egg_y, egg_list):
+    # Check whether a match is too close to an identified egg
+    for _x, _y in egg_list:
+        if (_x - egg_x)**2 + (_y - egg_y)**2 < prox_threshold:
+            return False
+    return True
+
+match_method = cv.TM_SQDIFF
+mask = cv.imread("mask.jpg", cv.IMREAD_COLOR)
+visualize = False   # Show matching boxes
+
+url = "http://whale.hacking-lab.com:3555/"
+sess = requests.Session()
+headers = {
+    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "Referer": "http://whale.hacking-lab.com:3555/",
+    "Host": "whale.hacking-lab.com:3555"
+}
+sess.headers.update(headers)
+
+image_window = "Source Image"
+if visualize:
+    cv.namedWindow(image_window, cv.WINDOW_AUTOSIZE)
+
+bad_captcha_count = 0
+stop = False
+while not stop:
+    # Get next captcha from server
+    req_index = sess.get(url)
+    req_image = sess.get(url + "picture")
+    arr = np.asarray(bytearray(req_image.content), dtype=np.uint8)
+    img = cv.imdecode(arr, -1)
+
+    # Uncomment for testing bad captchas with new templates
+    # img = cv.imread("bad_egg/pic1556315716_1.jpg", cv.IMREAD_COLOR)
+    # stop = True
+
+    eggs = []
+    for templ_name in listdir(templ_dir):
+        templ = cv.imread(templ_dir + templ_name, cv.IMREAD_COLOR)
+        result = cv.matchTemplate(img, templ, match_method, mask=mask)
+
+        # find all coordinates where the template matched
+        loc = np.where(result < match_threshold[templ_name])
+
+        h, w, _ = templ.shape
+        # check matches for sufficient separation
+        # collect good matches and mark them with rectangles
+        for (x, y) in zip(loc[1], loc[0]):
+            if proximity(x, y, eggs):
+                eggs.append((x, y))
+                cv.rectangle(img, (x, y), (x + w, y + h), [0, 255, 255], 2)
+
+    print("Egg count:", len(eggs))
+    if visualize:
+        cv.imshow(image_window, img)
+        cv.waitKey(0)
+
+    # Send result to server
+    egg_count = "s=" + str(len(eggs))
+    req_verify = sess.post(url + "verify", data=egg_count)
+    reply = req_verify.text
+    print(reply)
+    if reply.startswith("Wrong"):
+        cv.imwrite(bad_captcha + str(bad_captcha_count) + ".jpg", img)
+        bad_captcha_count += 1
+      </pre>
+      <p>
+        With the given set of templates, the script manages average runs of 
+        30 templates before making a mistake. After several attempts, I managed 
+        to hit a lucky streak and got 42 successful egg counts. The flag returned
+        was<br> 
+        <b>he19-s7Jj-mO4C-rP13-ySsJ</b>
+      </p>
+  </body>
+</html>

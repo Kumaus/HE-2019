@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="red">Egg 22: The Hunt: Muddy Quagmire</h2>
+      <p class="problem_red">
+          Welcome to the longest scavenger hunt of the world!
+          <br>
+          The hunt is divided into two parts, each of which will give you an Easter egg. 
+          Part 2 is the <b> Muddy Quagmire</b>.
+          <br>
+          To get the Easter egg, you have to fight your way through a maze. 
+          On your journey, find and solve 9 mini challenges, then go to the exit. 
+          Make sure to check your carrot supply! Wrong submissions cost one carrot each.
+      </p>
+      <h3>1. Muddy Quagmire maps</h3>
+      <p>
+        The muddy quagmire contains 8 mini-challenges followed by a final gate. 
+        A challenge number 5 seems to have been planned, but is nowhere to be found.
+        The tools for mapping and walking the maze are the same as for egg 21.
+      </p>
+      <pre style="font-size: 12px">
+        ++++++++++++++++++++++++++++++++++++++++++
+        +                                        +
+        +       #############################    +      Muddy Quagmire
+        +       #...#.#....#...4#...........#    +      
+        +       #.3.#.#..#...#.###.########.#    +
+        +       #...#...########..........#.#    +      1: Old Rumpy
+        +       #.##...###.....#..7..#..#.#.#    +      2: Simon's Eyes
+        +       #.....##.##.....#...#.##..#.#    +      3: Mathonymous
+        + ###########.#...##...#####......#.#    +      4: Randonacci
+        + #...........#...##.###.#...######.#    +       
+        + #.########..#......##..##..#......#    +      6: Cottontail Check
+        + #.#...O#X#..#..##......#..##.######    +      7: Bun Bun's Goods and Gadgets
+        + #1#.####.#..#.###.##...#.#.....#9##    +      8: Sailor John
+        + #.#....#.#..###...##...#.#..#..#..#    +      9: Ran-Dee's Secret
+        + #.####.#.#..###....##.##.#.#8#.##.#    +      
+        + #.#....#.#...2......###..#.....#..#    +      X: Mysterious Gate
+        + #.#.####.##...########..#..#.#..#.#    +
+        + #.#....#.###........6...#.#...#.#.#    +
+        + #.####.#..################.....##.#    +
+        + #......#..........................#    +
+        + ###################################    +
+        +                                        +
+        ++++++++++++++++++++++++++++++++++++++++++
+      </pre>
+      <h3>2. Challenge 1: Old Rumpy</h3>
+      <img src="img/ch01.jpg" class="centered" height="150">
+      <p class="problem_red">
+        Hey my friend, nice to meet you.
+        Can you help ma calculate a thing?
+        I'm able to teleport through times, but I get lost sometimes.<br>
+        One trip I plan will be today at 08:36 to Ouagadougou. 
+        Do you know what time it is there?<br>
+        Ah and my clock shows 01:56 at the moment.
+      </p>
+      <p>
+        On a <a href="https://www.timeanddate.de/uhrzeit/">world time</a> site, 
+        find the current time in the target city (01:56 for Ougadougou),
+        take the difference (in full hours) to the "my clock shows" time (0),
+        and add that to the planned time (08:36). 
+      </p>
+      <h3>3. Challenge 2: Simon's Eyes</h3>
+      <img src="img/ch02.jpg" class="centered" height="150">
+      <p class="problem_red">
+        Hi, I'm Simon from the Security Team.
+        Do you really pay attention?
+        I saw every step you made!
+        Tell me which moves you made till here from the beginning. 
+      </p>
+      <p>
+        As turns out in egg 27, the session cookie really stores the exact 
+        sequence of moves made, bad news if you wandered a bit. I had to 
+        restart the challenge. Another issue causing grief was that Simon has 
+        a different idea where north is: <code>/move/0/-1</code>, which I took 
+        as south. Took a few tries to sort that one out.
+      </p>
+      <p>
+        It helps to enter the path via URL rather than the arrow buttons. 
+        In my frame of reference, the direction keys are
+        <pre>
+          5 6 7
+          3   4
+          8 1 2</pre>
+        and the correct path was
+        <pre>
+          /?path=["3","3","3","1","1",
+                  "4","4","4","1","1",
+                  "3","3","3","1","1",
+                  "4","4","4","1","1",
+                  "3","3","3","3","3",
+                  "6","6","6","6","6","6","6","6","6","6",
+                  "4","4","4","4","4","4","4","4","4","4",
+                  "1","1","1","1","1","1",
+                  "4","4"]</pre>
+      </p>
+      <h3>4. Challenge 3: Mathonymous</h3>
+      <img src="img/ch03.jpg" class="centered" height="150">
+      <p class="problem_red">
+        Hmmmm....
+        one in mind ....
+        plus ...
+        minus ....
+        WAAAAAH.
+        Oh hey you came just right. Could you solve this until I search for my calculator?
+        Who I am you ask? I think that would be a bit embarrassing 
+        because I can not solve this simple equation. 
+      </p>
+      <p>
+        One just has to compute the sum and enter the result. Nothing special here.
+      </p>
+      <h3>5. Challenge 4: Randonacci</h3>
+      <img src="img/ch04.jpg" class="centered" height="150">
+      <p class="problem_red">
+        What a beautiful chain, but the last piece is missing.
+        Do you know what we need?<br>
+        <b>HINT</b>
+        random.seed(1337)<br>
+        sequence.append(1 % random.randint(1, 1))<br>
+        sequence.append(1 % random.randint(1, 1))<br>
+        sequence.append(2 % random.randint(1, 2))<br>
+        Greetz, Leonardo F. 
+      </p>
+      <p>
+        The chain has a row of elements with following numbers printed on:<br>
+        [0, 0, 0, 1, 2, 3, 6, 0, 10, 6, 34, 41, 2, 3, 92, 271, 228, 1158, 874, 
+        155, 760, 161, 1377, 76, 12877, 561, 2654, 48507, 97042, 174104, 78347, 
+        260851, 993674, 1259337, 2483645, 5740505, 1575587, 3826257, 21727529, 
+        24850563, 673343, 15828943, 214735647, 338253, 94471517, 385474364, 
+        26496473, 2080231810, 162912664, 348797635, 117488414, 10524736889, 
+        12805435028, 19348307706, 8178002329, 25897469511, 24880839358, 
+        187779182313, 378924045099, 330018976494, 57572802365, 1755769600244, 
+        1787962449615, 1399589890939, 4699103264099, 5537088097592, 799491845133, 
+        10875107129731, 41609657911621, 47938445436267, 6044678688289, 76354192309034, 
+        20146302444405, 50538003336545, 169286736998843, 140463926976638, 
+        1372753687833637, 2090937796081262, 3208841539011769, 223403826756170, 
+        18890057209817362, 15098281334975233, 1101146015708157, 47550101433457787, 
+        12050597934415257, 128657844735176285, 169277061937864378, 330510651947427135, 
+        340288707202349036, 11709533245952345, 302127549822334661, 2559809026849192761, 
+        1568191551607991366, 3600013976164019953, 7680536423553600728, 
+        17111575771294704535, 29807283816584340074, 53397101317854812084, 
+        16641745710990072136, 1079100819585860413, 125341458820724802472, 
+        33195859417603166742, ??????????????????????????????????????] 
+      </p>
+      <p>
+        The challenge builds on the fact that the random package in python uses a 
+        seeded pseudo-random number generator (same as other languages). Same 
+        seed, same sequence of results. The hint specifies that we should seed with 
+        1337 and then find "random" integers bound by successive terms of the 
+        Fibonacci sequence. Following instructions reproduces the chain:
+      </p>
+      <pre class="prettyprint lang-py">
+import random
+
+random.seed(1337)
+fib = [1, 1]    # Fibonacci sequence
+sequence = []   # Pseudo-random sequence
+sequence.append(1 % random.randint(1, 1))
+sequence.append(1 % random.randint(1, 1))
+
+for n in range(200):
+    fib.append(fib[-1] + fib[-2])
+    sequence.append(fib[-1] % random.randint(1, fib[-1]))
+print(sequence)</pre>
+      <h3>6. Challenge 6: Cottontail Check</h3>
+      <img src="img/ch06.jpg" class="centered" height="150">
+      <p class="problem_red">
+          We require you to prove your rabbitbility.
+          Prove that you know the c0tt0nt4il alphabet. 
+      </p>
+      <img src="img/ch06_captcha.png" class="centered">
+      <p>
+        On the challenge page, the captcha bounces around like crazy, 
+        but one can catch it by getting the image from the page 
+        source (or via screenshot). C0tt0nt4il loves LeetSpeak, 
+        so we need the next letter in the Leet alphabet after
+        0pqr57u, which is v.
+      </p>
+      <h3>7. Challenge 7: Bun Bun's Goods and Gadgets</h3>
+      <img src="img/ch07.jpg" class="centered" height="150">
+      <p class="problem_red">
+        Welcome Visitor. Feel free to take a look around my store.
+        If you want to buy something just tell me.
+        I also have a free article here - if you find it, you can have it.
+        Else I will take you a live! Carrots sell very well nowadays. 
+      </p>
+      <p>
+        Two commands are available in the shop:
+        <ul>
+          <li>
+            <b>/?action=watch</b> causes a sequence of 19 HTTP redirections,
+            each of which contains two custom headers:
+            <pre>
+    Content-Type: shop/coffee (or something else)
+    WhatYouHear: You are not really interested or? (or something else)</pre>
+            The Content-Type always shows the same set of 19 items, 
+            in different order:<br>
+            <code>
+              sand, ring, bread, necklace, trousers, tshirt, computer, 
+              knife, suit, hammer, metal, lolly, cake, gun, coffee, 
+              teabag, wood, doll, plate
+            </code><br>
+            WhatYouHear is one of 7 different messages, apparently associated at 
+            random.
+          </li>
+          <li>
+            <b>/?action=buy</b> attempts to buy something, presumably the 
+            last item seen in the shop. If it is not the required article,
+            a very interesting error code appears:
+            <pre>418 I'M A TEAPOT</pre>
+            This code actually exists, it originated as an IETF april 1 joke
+            in RFC 2342, but has been reserved in the meantime. Nice!
+          </li>
+        </ul>
+      </p>
+        The Navigator helps with a hint: "What a nice inventory. 
+        We should buy something for Madame Pottine." So, we need something 
+        for a teapot, which is of course a teabag. Luckily, one exists 
+        in the shop inventory. In order to buy it, we have to interrupt 
+        the redirect sequence when the teabag appears and issue a buy command.
+      </p>
+      <pre class="prettyprint lang-py">
+import requests
+
+url = "http://whale.hacking-lab.com:5337/"
+sess = requests.Session()
+headers = {
+    "Referer": "http://whale.hacking-lab.com:5337/",
+    "Host": "whale.hacking-lab.com:5337"
+}
+sess.headers.update(headers)
+cookies = {
+    "session": "z.Cl49<span class="insert">... current session cookie ...</span>t2k2Q=="
+}
+sess.cookies.update(cookies)
+
+# See what's in the shop
+req = sess.get(url + "?action=watch", allow_redirects=False)
+while req.status_code == 302:
+    # Look for a teabag
+    if req.headers['Content-Type'] == "shop/teabag":
+        req_buy = sess.get(url + "?action=buy", allow_redirects=False)
+        print(req_buy.text)
+        cookie = req_buy.headers['Set-Cookie']
+        # print the session cookie after buying the teabag
+        print(cookie.split(';')[0])
+        break
+    req = sess.get(url, allow_redirects=False)</pre>
+      <h3>8. Challenge 8: Sailor John</h3>
+      <img src="img/ch08.jpg" class="centered" height="150">
+      <p class="problem_red">
+        "Ahoy sailor, my name is John!
+        Can you help me, solving this riddle?" <br>
+        <var>
+          emirp<sup>x</sup> mod prime = c <br>
+          p1 = 17635204117, c1 = 419785298 <br> 
+          p2 = 1956033275219, c2 = 611096952820
+        </var>
+      </p>
+      <p>
+        We have to find a discrete logarithm, a hard computational problem used 
+        in cryptography. The "baby steps giant steps" algorithm is recommended
+        for this:
+      </p>
+      <pre class="prettyprint lang-py">
+import math
+
+def baby_steps_giant_steps(a, b, p, N=None):
+    if not N:
+        N = 1 + int(math.sqrt(p))
+
+    # initialize baby_steps table
+    baby_steps = {}
+    baby_step = 1
+    for r in range(N+1):
+        baby_steps[baby_step] = r
+        baby_step = baby_step * a % p
+
+    # now take the giant steps
+    giant_stride = pow(a, (p-2)*N, p)
+    giant_step = b
+    for q in range(N+1):
+        if giant_step in baby_steps:
+            return q*N + baby_steps[giant_step]
+        else:
+            giant_step = giant_step * giant_stride % p
+    return "No Match"
+
+p1 = 17635204117
+a1 = int(str(p1)[::-1])
+c1 = 419785298
+x1 = baby_steps_giant_steps(a1, c1, p1)
+print("a1 =", a1)
+print("x1 =", x1)
+p2 = 1956033275219
+a2 = int(str(p2)[::-1])
+c2 = 611096952820
+x2 = baby_steps_giant_steps(a2, c2, p2)
+print("a2 =", a2)
+print("x2 =", x2)</pre>
+      <p>
+        This solves the two problems rather quickly:
+        <pre>
+          71140253671<sup>x1</sup> mod 17635204117 = 419785298
+              &rarr; x1 = 1647592057    = 0x62344279    --> b4By
+          9125723306591<sup>x2</sup> mod 1956033275219 = 611096952820
+              &rarr; x2 = 305768189495  = 0x4731344e37  --> G14N7
+        </pre>
+        The password is <b>b4ByG14N7</b>
+      </p>
+      <h3>9. Challenge 9: Ran-Dee's Secret</h3>
+      <img src="img/ch09.jpg" class="centered" height="150">
+      <p class="problem_red">
+        "I just did my daily cryptotraining and found this one..."<br>
+        Let's use a very small list of primes for RSA style encryption purposes. 
+        In fact their list is only the size of the smallest odd prime. 
+        One of the robots sent a message to three other robots. 
+        These are futuristic robots with the ability to use quantum computing 
+        and so they don't mind prime factoring huge numbers. You can't do that though. 
+        Find out what message the robot sent to his friends. 
+      </p>
+      <pre><var>
+n<sub>0</sub> = 43197226819995414250880489055413585390503681019180594772781599842207471693041753
+     12988543940330601142306392210554155765819409217755814518415146092073267565213487
+     6335722840331008185551706229533179802997366680787866083523
+c<sub>0</sub> = 28181072004973949938546689607280132733514376641605169495754912428335704118088087
+     97891834474193761870619272836999236510478685442768967567320435383926319658151746
+     2813454954645956569721549887573594597053350585038195786183
+
+n<sub>1</sub> = 10603199174122839808738169357706062732533966731323858892743816728206914395320609
+     33146625763109664651198650650127203600766835807130436415615034513898364863087422
+     0488837685118753574424686204595981514561343227316297317899
+c<sub>1</sub> = 88389551551870299015700839894517562236934817747927372766618882238451527834609123
+     12232286335622864431266349602863379622162995668522612751896796186394681006174093
+     85486757117996512128227299052476236805574920658456448123
+
+n<sub>2</sub> = 56133586686716136655665103829944414072194320629988325233058401869707803703682716
+     18683122274081615792349154210168307159475914213081021759597948038689876676892007
+     399580995868266543309872185843728429426430822156211839073
+c<sub>2</sub> = 48708483623021900384447772377837737629891304240520970206578416605029721444459236
+     14388484256730535971521519431799627785375106287039267168740424012477722145444567
+     771983730549192737704000541149116222676893530432722372149
+      </var></pre>
+      <p>
+        If the robot only uses 3 primes <var>p<sub>0</sub>, p<sub>1</sub>, p<sub>2</sub></var> 
+        for encryption, then there are only 3 distinct values of <var>n</var> he can generate:
+        <pre><var>
+     n<sub>0</sub> = p<sub>1</sub> * p<sub>2</sub>, 
+     n<sub>1</sub> = p<sub>2</sub> * p<sub>0</sub>, 
+     n<sub>2</sub> = p<sub>0</sub> * p<sub>1</sub></pre></var>
+        One can solve for <var>p</var>:
+        <pre><var>
+     p<sub>0</sub> = &#8730;(n<sub>1</sub> * n<sub>2</sub> / n<sub>0</sub>) = 1173821128899717744763168991586024137475923012574062580
+                            049287532012184965219319828285650431646942194944437493
+     p<sub>1</sub> = &#8730;(n<sub>2</sub> * n<sub>0</sub> / n<sub>1</sub>) = 4782124405899304514745349491894350894228449009067812460
+                            621545024973542842784947583120716593095450482771264061
+     p<sub>2</sub> = &#8730;(n<sub>0</sub> * n<sub>1</sub> / n<sub>2</sub>) = 9033062119150775356115605417902072538098631081058159551
+                            678022048966520848600866260935959311606867286026034943</var></pre>
+      </p>
+      <p>
+        This is enough to decrypt the messages, without any need for quantum computing, 
+        if we know the encryption exponent <var>e</var>. Normally, <var>e</var> and <var>n</var> 
+        are provided together with the cryptotext. This leaves us with guessing. According
+        to Wikipedia, the most common exponents are 3 and 65537 = 0x10001. The second choice 
+        worked and gave the same plaintext in all three cases:
+      </p>
+      <pre><var>
+e = 65537
+d<sub>0</sub> = modinv(e, (p<sub>1</sub>-1)*(p<sub>2</sub>-1))
+m = c<sub>0</sub><sup>d<sub>0</sub></sup> mod n<sub>0</sub>
+  = 0x525341336e6372797074216f6e77216c6c6e65766572642165
+      </var></pre>
+      <p>
+        Converting to ASCII gives the plaintext <b>RSA3ncrypt!onw!llneverd!e</b>
+      </p>
+      <h3>10. Finale: Mysterious Gate</h3>
+      <img src="img/ch_X_closed.png" class="centered" height="250">
+      <p class="problem_red">Is it locked?</p>
+      <p>
+        The gate works like a number lock: each counter can be adjusted, and when the 
+        all the correct numbers are found, the gate openes. Behind the scenes some
+        JavaScript controls the gate, which is only loaded if all mini-challenges have 
+        been solved. 
+      </p>
+      <pre class="prettyprint lang-js">
+function h(s) {
+    return s.split("").reduce(function (a, b) {
+        a = ((a &lt;&lt; 5) - a) + b.charCodeAt(0);
+        return a & a
+    }, 0);
+}
+
+var ca = function (str, amount) {
+    if (Number(amount) &lt; 0)
+        return ca(str, Number(amount) + 26);
+    var output = '';
+    for (var i = 0; i &lt; str.length; i++) {
+        var c = str[i];
+        if (c.match(/[a-z]/i)) {
+            var code = str.charCodeAt(i);
+            if ((code >= 65) && (code &lt;= 90))
+                c = String.fromCharCode(((code - 65 + Number(amount)) % 26) + 65);
+            else if ((code >= 97) && (code &lt;= 122))
+                c = String.fromCharCode(((code - 97 + Number(amount)) % 26) + 97);
+        }
+        output += c;
+    }
+    return output;
+};
+
+$('.door').click(function () {
+    var n = [
+        $('#n1').val(),
+        $('#n2').val(),
+        $('#n3').val(),
+        $('#n4').val(),
+        $('#n5').val(),
+        $('#n6').val(),
+        $('#n7').val(),
+        $('#n8').val()
+    ];
+
+    var g = 'Um';
+    var et = 'iT';
+    var lo = 'BG';
+    var st = '4I';
+
+    var into = 'xr';
+    var the = 'Xp';
+    var lab = 'rr';
+    var hahaha = 'Qv';
+
+    var ok = ca('mj19', -5) + '&lt;br>' +
+        ca(et, n[0]) +
+        ca(the, n[1]) + '&lt;br>' +
+        ca(g, n[2]) +
+        ca(lo, n[3]) + '&lt;br>' +
+        ca(st, n[4]) +
+        ca(hahaha, n[5]) + '&lt;br>' +
+        ca(into, n[6]) +
+        ca(lab, n[7]);
+
+    $('#key').html(ok);
+
+    if (h(n.join('')) === -502491864) {
+        $('.door').toggleClass('what');
+    }
+});</pre>
+      <P>
+        The function h(s) computes a simple hash of the string parameter with the help of some 
+        JavaScript trickery. The other function ca(str, amount) caesar-shifts all alphabetic 
+        characters in str by amount. Whenever the mouse is clicked anywhere on the gate,
+        the currently visible code numerals are concatenated into a string and sent to 
+        the hashing function h. The result is compared to -502491864, which is hard-coded.
+        If the hash fits, the gate is opened to reveal a flag underneath (the result of
+        caesar-shifting flag fragments by the code numbers).
+      </P>
+      <p>
+        I was hoping to find at least some hints about the correct code within the maze ... 
+        I couldn't see any. After some fruitless search and some rather wild theories I was 
+        rescued by keep3r with the hint "don't overthink, just bruteforce". With python
+        this required some patience and produced some false positives (after all, the 
+        hash is pretty simple). 
+      </p>
+      <pre class="prettyprint lang-py">
+from ctypes import c_int32
+from itertools import product
+
+def h(text):
+    s = 0
+    for c in text:
+        s = (s &lt;&lt; 5) - s + ord(c)
+    return c_int32(s).value
+
+count = 0
+for n in product(range(-10, 10), repeat=8):
+    count += 1
+    n_str = ''.join(map(str, n))
+    if h(n_str) == -502491864:
+        print(n)</pre>
+      <p>
+        By sheer luck, the first hit turned out to be the solution:<br>
+        (-9, 2, 4, 8, 6, 6, 3, 1) &rarr; <b>he19-zKZr-YqJO-4OWb-auss</b> 
+      </p>
+      <img src="img/ch_X_open.png" class="centered" height="200">
+  </body>
+</html>

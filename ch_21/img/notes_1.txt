@@ -1,0 +1,5 @@
+answer: [0,16]
+    --> /?pixels=[0,16]
+    
+Session-cookie:
+z.gSSgh4rqQv6TEv0EXJwN1X9zUrwC8p+iamP/lMPnjNLyW+N0nybbaVUhyWTIeYK5eqK7P8GEL0JTj5Mszkgp6wVebZcleqSKbIKYwfDPNnTtnnEz+dTRWKDOzmtBFO5gEN0W1fSaEiX/FkNWTms8fiOeD7FACMrhcDsEARXjX5z6ziNzHduS4ytERmnXcU3jXdSNOpdyCU2qZOIF/TO0dSgiyw2VcBvOyGVqCbEw8JiPMruqAbhKmdiFx7aKZksbeGmfmroSfhHGDa/HZIOdPZGNs+xgKurKr1e0HghHkJRULFb677vKTTHyS7LLStqBLluVpGEVqsvgw4hKV1/oZ9gsIiyrKCNBoBLhfFpsgRksZo83zcAsrgdOKvM=.ksBD72ToQ4gYeThN0kItSw==.TqC77XePsvmD4tDzPi8fmg==
