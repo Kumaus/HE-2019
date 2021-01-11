@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="green">Egg 8: Modern Art</h2>
+    <p class="problem_green">Do you like modern art?</p>
+    <img src="img/modernart.jpg" height="300">
+    <p>
+      This egg was quite the journey. The small QR codes decode to "remove me". 
+      If one does that and replaces the position and alignment squares in the 
+      large QR, it reads "Isn't that a bit too easy?". Reverse gear ...
+    </p>
+    <p>
+      Analysis of the jpg image file, for exampel with 
+      <a href="http://www.caesum.com/handbook/stego.htm">Stegsolve</a> by Caesum
+      or by looking for the JPG termination sequence 0xFF 0xD9, shows
+      that there is additional material behind the image:
+      <table class="listing">
+        <tr>
+          <td>0 - 0x11351</td>
+          <td>
+            Original image of beautified QR code
+          </td>
+        </tr>
+        <tr>
+          <td>0x11352 - 0x226223</td>
+          <td>
+            Another JPG file with missing header, 
+            which looks remarkably similar to the first.
+          </td>
+        </tr>
+        <tr>
+          <td>0x226224 - 0x22886</td>
+          <td>
+            611 bytes of utf-8, which shows another small QR code
+          </td>
+        </tr>
+      </table>
+    </p>
+    <img src="img/modernart_1.jpg" style="height:180px; margin-left:10px;">>
+    <img src="img/modernart_2.jpg" style="height:180px; margin-left:10px;">
+    <img src="img/modernart_3.png" style="height:150px; margin-left:10px;">
+    <p>
+      The third QR code (utf-8 encoded) simply reads <b>AES-128</b>. <br>
+      The header of the second JPG is easily repaired, by copying the leading 
+      0xB7 bytes from the first JPG. It looks very similar to the first, but 
+      shows some strange distortions, indicating content which shouldn't be there.
+      A bytewise comparison with the first JPG identifies the culprits:
+      <table class="listing">
+        <tr>
+          <td>0xA995 - 0xA9B6</td>
+          <td>(E7EF085CEBFCE8ED93410ACF169B226A)</td>
+        </tr>
+        <tr>
+          <td>0xD974 - 0xD95C</td>
+          <td>(KEY=1857304593749584)</td>
+        </tr>
+      </table>
+      Decrypting this with AES-128 in ECB-mode (for example with 
+      <a href="https://gchq.github.io/CyberChef">CyberChef</a>) gives the flag:<br>
+      <b>Ju5t_An_1mag3</b>
+    </p>
+  </body>
+</html>

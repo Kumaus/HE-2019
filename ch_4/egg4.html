@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="green">Egg 4: Disco 2</h2>
+    <p class="problem_green">This year, we dance outside, yeaahh!</p>
+    <img src="img/disco.png" height="400">
+    <p>
+      Wow, beautifully designed!! Quite some time passes while admiring the disco ball 
+      from all angles, zooming in, zooming out and listening to the music. 
+      Really creative!! But ... where's the flag? 
+      <br>
+      The page source reveals that this is done with <a href="https://threejs.org/">Three.js</a>, 
+      a cross-browser JavaScript library for rendering 3D graphics. Lights, surface textures,
+      background reflections ... the works. Of particular interest is a JavaScript include file, 
+      <b>js/mirrors.js</b>, which lists the centre coordinates of a huge number of mirrors:
+    </p>
+    <pre class="prettyprint lang-js">
+var mirrors = [
+    [-212.12311944947584, 229.43057454041843, 249.7306422149211],  
+    [360.6631259495831, 169.04730469627978, -36.67585520745629],  
+    //  ... 1930 mirrors ...
+    [-170.04342714592286, -346.41016151377545, -105.2864325754712]
+];</pre>
+    <p>
+      Surely something can be hidden in this mass of mirrors. Checking the distance 
+      sqrt(x^2 + y^2 + z^2) of each mirror from the centre reveals that 1602 of the 1930 
+      mirrors lie on the disco sphere with radius 400. The remaining 328 have much smaller 
+      distance; they are masked by the spere and therefore invisible to the outside viewer. 
+      Let's modify the script to make them visible:  
+    </p>
+    <ol>
+      <li>
+        <b>Make a local copy</b> of disco2.html and its includes
+      </li>
+      <li>
+        <b>Remove the background</b><br>
+        Comment out line 114 <code>sceneCube.add(cubeMesh);</code>
+      </li>
+      <li>
+        <b>Remove the opaque sphere</b><br>
+        Comment out line 132 <code>scene.add(sphereMesh);</code><br>
+        &rarr; a structure becomes visible inside ...
+      </li>
+      <li>
+        <b>Remove the outer mirrors</b><br>
+        <img src="img/hidden_mirrors.png" style="float:right; height:200px;">
+        In the block around line 139 where the mirrors are added, exclude mirrors on 
+        and outside the sphere of radius 400<br>
+        <pre class="prettyprint lang-js">
+for (var i = 0; i &lt; mirrors.length; i++) {
+  var m = mirrors[i];
+  if (m[0]*m[0] + m[1]*m[1] + m[2]*m[2] &lt; 159999) { 
+    mirrorTile = new THREE.Mesh(tileGeom, sphereMaterial);
+    mirrorTile.position.set(m[0], m[1], m[2]);
+    mirrorTile.lookAt(center);
+    scene.add(mirrorTile);
+  }
+}</pre>
+        &rarr; Much better: a QR code. Difficult to read though.
+      </li>
+      <li>
+        <b>Turn the mirrors in one direction</b> to flatten them<br>
+        Change the 6th line in the fragment above 
+        to <code>mirrorTile.lookAt(0, 2000, 10000);</code><br> 
+        Not <code>(0,0,10000)</code>, because the QR code plane is at a slight angle.
+      </li>
+      <li>
+        <b>Make the mirrors non-reflective</b><br>
+        A non-reflective material called <code>sphereMaterial2</code> is defined
+        in line 122 for the body of the spere. Might as well use that: change
+        the 4th lien in the fragment above to <br>
+        <code>mirrorTile = new THREE.Mesh(tileGeom, sphereMaterial2);</code>
+      </li>
+    </ol>
+    <p>
+      <img src="img/qr1.png" height="200">
+      <img src="img/qr2.png" height="200">
+      <img src="img/qr3.png" height="200">
+    </p>
+    <p>
+      After taking a screenshot, adjusting the colours and flipping the image, 
+      the result is good enough to pass a QR reader:<br>
+      <b>he19-r5pN-YIRp-2cyh-GWh8</b>
+    </p>
+  </body>
+</html>

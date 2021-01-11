@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="yellow">Egg 15: Seen in Steem</h2>
+      <p class="problem_yellow">
+        An unknown person placed a secret note about Hacky Easter 2019 in the Steem blockchain. 
+        It happend during Easter 2018.
+      </p>
+      <p>
+        Steem is a blockchain established in 2016 which is used both for a social media network (Steemit) 
+        and for a crypto currency. Rather than the usual "proof of work" which requires heavy computation, 
+        steem relies on a delegated "proof of stake" consensus protocol, where the creator of the next block 
+        is chosen by stake (which could be seen as reputation). As a result, there are no transaction costs,
+        and the time between blocks can be very low (around 3 seconds). Steem is among the 5 most active 
+        blockchains worldwide.
+      </p>
+      <p>
+        As a result, the Steem blockchain is huge. The blockchain is intended for data verification and not 
+        for data retrieval, which is very inefficient. Usually, to find data one should consult a 
+        database containing data from all blocks and continuously updated. While there are different searchable 
+        front-ends of differing quality, an openly accessible SQL project was discontinued. Several paid services 
+        exist, but that is cheating, isn't it? 
+      </p>
+      <p>
+        After quite a bit of searching for generic data access front-ends, I gave up and decided to download the 
+        portion of the blockchain corresponding to 1. April 2018 (Easter sunday). 1 GB for only one day ... 
+        To find the appropriate block numbers, I used the 
+        <a href="https://steemworld.org/block/21167975">steemworld API</a>
+        to show block characteristic data. We need to consider 30000 blocks in the range 
+        21170000 - 21200000
+      </p>
+      <p>
+        There is a useful python package for interactions with the steem blockchain: 
+        <a href="https://github.com/steemit/steem-python">steem-python</a>. 
+        This package offers functions for accessing all blockchain content, but because I knew 
+        nothing except a date, I opted to download the relevant blocks completely and to search 
+        them locally. The script below does that, grabbing blocks in groups of 1000 
+        before saving them as a JSON structure:
+      </p>
+      <pre class="prettyprint lang-py"> 
+from steem import Steem
+from steem.blockchain import Blockchain
+import json
+
+class SteemNode:
+    def __init__(self, block, block_count, operation):
+        self.block = block
+        self.end_block = block_count + self.block - 1
+        self.operation = operation
+        self.nodes = ['https://rpc.buildteam.io', 'https://api.steemit.com',
+                      'https://rpc.steemviz.com']
+        self.steem = Steem(nodes=self.nodes)
+        self.b = Blockchain(self.steem)
+
+        self.easter = dict()
+        print('Booted\nConnected to: {}'.format(self.nodes[0]))
+
+    def run(self):
+        run = True
+        while run:
+            try:
+                stream = self.b.stream_from(start_block=self.block,
+                                            end_block=self.end_block,
+                                            full_blocks=True)
+                for block in stream:
+                    if block['timestamp'].startswith('2018-04-01T'):
+                        self.easter[self.block] = block
+
+                    if self.block == self.end_block:
+                        run = False
+                    else:
+                        self.block += 1
+            except Exception as e:
+                continue
+
+    def save(self, easter_file):
+        with open(easter_file, 'w') as fh:
+            json.dump(self.easter, fh)
+
+for start_block in range(21170000, 21200000, 1000):
+    print(start_block)
+    steem_node = SteemNode(start_block, 1000, "transfer")
+    steem_node.run()
+    print("... saving")
+    steem_node.save("easter_" + str(start_block // 1000) + ".json")</pre>
+      <p>
+        Once the block download was complete, a brutal raw text search for "Hacky" identified the
+        correct transaction:
+      </p>
+      <pre class="prettyprint lang-py">
+for n in range(21170, 21200):
+    with open("blockchain/easter_" + str(n) + ".json", "r") as fh:
+        block_list = fh.read()
+    index = block_list.find("Hacky")
+    if index > -1:
+        print("block", n, "index", index)
+        print(block_list[index-500: index+500])</pre>
+      <p>
+        The surrounding text:
+      </p>
+      <pre class="prettyprint">
+... at-is-not", "weight": 10000}]], "extensions": [], "signatures": ["2031...923"], 
+  "transaction_id": "0ac6...d47", "block_num": 21187964, "transaction_num": 66}, 
+{"ref_block_num": 19815, "ref_block_prefix": 2055191833, "expiration": "2018-04-01T14:49:36", 
+  "operations": [["transfer", {"from": "darkstar-42", "to": "ctf", "amount": "0.001 SBD", 
+    "memo": "Hacky Easter 2019 takes place between April and May 2019. Take a note: nomoneynobunny"}]], 
+  "extensions": [], "signatures": ["1f24...580"], 
+  "transaction_id": "9413...f12", "block_num": 21187964, "transaction_num": 67}, 
+{"ref_block_num": 19813, "ref_block_prefix": 2741053796, "expiration": "2018-04-01T14:49:30", 
+  "operations": [["custom_json", {"requi ...</pre>
+      <p>
+        The secret enty is a transfer transaction from darkstar-42 to ctf with a memo:
+        <code>Hacky Easter 2019 takes place between April and May 2019. Take a note: 
+        nomoneynobunny</code>. So, the password is <b>nomoneynobunny</b>. Which begs 
+        the question whether darkstar's transfer of 0.001 SBD was enough to merit 
+        even the smallest of bunnies ... 
+      </p>
+  </body>
+</html>

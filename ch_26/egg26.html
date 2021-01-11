@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="blue">Egg 26: Hidden Egg 2</h2>
+    <p class="problem_blue">
+      A stylish blue egg is hidden somewhere here on the web server. Go catch it!
+    </p>
+    <img src="img/Egg26.png" style="float:right; height:150px; margin-left:10px;">
+    <p>
+      The usual suspects for "somewhere on the server" are the /images, /js and /css 
+      folders, and good old robots.txt. Unfortunately, those folders are all protected,
+      and robots.txt just brings up<br>
+      <code>Nothing here, really. Had enough robots.txt challenges.</code>
+    </p>
+    <p>
+      The next place to search is the named js and css files loaded by the 
+      different pages. But there's a strange thing: no css links are visible 
+      in the page sources! Chief suspect: evil JavaScript trickery! This makes
+      the CSS files chief suspec ... if one can find their names. Luckily, the 
+      browser inspection and network analysis tools reveal all:  
+    </p>
+    <img src="img/analysis.png" width="800">
+    <p>
+      The long slog through the different css files on the list is finally 
+      rewarded in <b>/css/source-sans-pro.css</b>: an interesting font is 
+      defined as last entry.
+      <pre class="prettyprint">
+@font-face {
+    font-family: 'Egg26';
+    font-weight: 400;
+    font-style: normal;
+    font-stretch: normal;
+    src: local('Egg26'),
+    local('Egg26'),
+    url('../fonts/TTF/Egg26.ttf') format('truetype');
+}</pre>
+      The supposed font file <b>/fonts/TTF/Egg26.ttf</b> turns out to be a 
+      png image file in disguise, and changing the extension reveals the egg.
+    </p>
+  </body>
+</html>

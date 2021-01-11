@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="green">Egg 3: Sloppy Encryption</h2>
+    <p class="problem_green">
+      The easterbunny is not advanced at doing math and also really sloppy.
+      <br>
+      He lost the encryption script while hiding your challenge. Can you decrypt it?
+      <br>
+      <code>K7sAYzGlYx0kZyXIIPrXxK22DkU4Q+rTGfUk9i9vA60C/ZcQOSWNfJLTu4RpIBy/27yK5CBW+UrBhm0=</code>
+    </p>
+    <p>
+      Well, an encryption script in ruby was supplied, so I guess our sloppy bunny lost the 
+      decryption script instead.
+    </p>
+    <pre class="prettyprint lang-rb">
+require"base64"
+puts"write some text and hit enter:"
+input=gets.chomp
+h=input.unpack('C'*input.length).collect{|x|x.to_s(16)}.join
+ox='%#X'%h.to_i(16)
+x=ox.to_i(16)*['5'].cycle(101).to_a.join.to_i
+c=x.to_s(16).scan(/../).map(&:hex).map(&:chr).join
+b=Base64.encode64(c)
+puts"encrypted text:""#{b}"</pre>
+    <p>
+      Looks pretty obfuscated, but maybe that's just what ruby is like ... 
+    </p>
+    <table class="bordered">
+      <tr>
+        <th>sloppy.rb</th>
+        <th>What it means</th>
+      </tr>
+      <tr>
+        <td>
+          require"base64"
+        </td>
+        <td>
+          load base64 module
+        </td>
+      </tr>
+      <tr>
+        <td>
+          puts"write some text and hit enter:"<br>
+          input=gets.chomp
+        </td>
+        <td>
+          strip CR/NL from end of input
+        </td>
+      </tr>
+      <tr>
+        <td>
+          h = input.unpack('C'*input.length)<br>.collect{|x|x.to_s(16)}<br>.join
+        </td>
+        <td>
+          convert to array of unsigned chars<br>
+          express each array element as hex string<br>
+          connect those into a string (long hex number)
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ox = '%#X'%h.to_i(16)
+        </td>
+        <td>
+          convert hex string to a long integer<br>
+          use a format string to convert this back to a hex string<br>
+          %#X &rarr; uppercase hex, starting with '0x'
+        </td>
+      </tr>
+      <tr>
+        <td>
+          x = ox.to_i(16)<br>*['5'].cycle(101).to_a.join.to_i
+        </td>
+        <td>
+          convert hex string to integer (again ...)<br>
+          multiply with 555....55 (101 digits), <br>
+          made by stringing 101 characters '5' together
+        </td>
+      </tr>
+      <tr>
+        <td>
+          c = x.to_s(16)<br>.scan(/../)<br>.map(&:hex).map(&:chr)<br>.join
+        </td>
+        <td>
+          convert result to hex string<br>
+          read pairs of hex digits into array (may drop final digit!)<br>
+          convert the elements to integers and then to (byte) characters<br>
+          join those into a byte string
+        </td>
+      </tr>
+      <tr>
+        <td>
+          b = Base64.encode64(c)
+        </td>
+        <td>
+          base64 encode this mess ...
+        </td>
+      </tr>
+      <tr>
+        <td>
+          puts"encrypted text:""#{b}"
+        </td>
+        <td>
+          ... and print the result
+        </td>
+      </tr>
+    </table>
+    <p>
+      To reverse this, it seemed least painful to re-use code from the encryptor 
+      in an <a href="https://repl.it/languages/ruby">online ruby IDE</a>:
+    </p>
+    <pre class="prettyprint lang-rb">
+require"base64"
+b = "K7sAYzGlYx0kZyXIIPrXxK22DkU4Q+rTGfUk9i9vA60C/ZcQOSWNfJLTu4RpIBy/27yK5CBW+UrBhm0="
+c = Base64.decode64(b)
+x = c.unpack('C'*c.length).collect{|x|'%02x'%x}.join.to_i(16)
+ox = x/['5'].cycle(101).to_a.join.to_i
+input = ox.to_s(16).scan(/../).map(&:hex).map(&:chr).join</pre>
+    <p>
+      Out pops the decryptet solution: <b>n00b_style_crypto</b>
+    </p>
+  </body>
+</html>

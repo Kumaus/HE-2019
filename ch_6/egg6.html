@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="green">Egg 6: Dots</h2>
+    <p class="problem_green">Uncover the dots' secret!</p>
+    <img src="img/dots1.png" height="170">
+    <img src="img/dots2.png" style="height:170px; margin-left:2cm;">
+    <p>
+      Having read <b>Mathias Sandorf</b> by Jules Verne, this immediately smelled 
+      like a <b>turning grille cipher</b>, where a mask 
+      with several holes is placed on the code, and the letters visible through
+      the holes are noted. The mask is then successively rotated four times by 90° 
+      and the process repeated to uncover the secret message.
+    </p>
+    <img src="img/dots_partial.png" style="float:right; height:140px; margin-left:10px;">
+    <p>
+      One quarter of the mask seems to be missing. If the partial mask is used to 
+      decode, we get:
+      <table class="listing">
+        <tr><td>0°</td><td>red</td><td>HELLOUC</td></tr>
+        <tr><td>90°</td><td>green</td><td>CHOCOLT</td></tr>
+        <tr><td>180°</td><td>blue</td> <td>DIWHITE</td></tr>
+        <tr><td>270°</td><td>orange</td><td>HPASSWO</td></tr>
+      </table>
+      which looks promising. 8 letters were no used. The unused letters in the 
+      lower right quadrant show where the holes in the missing part of the 
+      mask are. 
+    </p>
+    <img src="img/mask_complete.png" style="float:right; height:140px; margin-left:10px;">
+    <img src="img/dots_complete.png" style="float:right; height:140px; margin-left:10px;">
+    <p>
+      Using the completed mask on the letter grid gives:
+      <table style="border-spacing:30px 0;">
+        <tr><td>0°</td><td>red</td><td>HELLOBUCK</td></tr>
+        <tr><td>90°</td><td>green</td><td>CHOCOLATE</td></tr>
+        <tr><td>180°</td><td>blue</td> <td>RDISWHITE</td></tr>
+        <tr><td>270°</td><td>orange</td><td>THEPASSWO</td></tr>
+      </table>
+      So the mask was turned counterclockwise. The plain text (inserting spaces) is<br>
+      <b>HELLO BUCK THE PASSWORD IS WHITE CHOCOLATE</b>
+    </p>
+  </body>
+</html>

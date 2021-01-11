@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="yellow">Egg 11: Memeory 2.0</h2>
+      <p class="problem_yellow">
+        We improved Memeory 1.0 and added an insane serverside component. 
+        So, no more CSS-tricks. Muahahaha.
+        <br>
+        Flagbounty for everyone who can solve 10 successive rounds. 
+        Time per round is 30 seconds and only 3 missclicks are allowed.
+        <br>
+        Good game.
+      </p>
+      <p>
+        The memory game at whale.hacking-lab.com:1111 starts off by showing 98 covered up 
+        picture cards. A pair of cards is selected by clicking on them. Whenever the pair
+        matches, it is left open, otherwise the cards are covered again after a short time. 
+        The goal is to uncover the whole deck within 30 seconds, with only 3 mistakes 
+        permitted. Obviously, this is beyond superhuman and requires cheating.
+      </p>
+      <img src="img/memory.png" class="centered" width="700">
+      <p>
+        Every card is represented as a html figure containing both the hidden image and 
+        the backside cover.
+        <pre class="prettyprint lang-html">
+&lt;figure id="legespiel_card_82"&gt;
+    &lt;a href="#card_82"&gt;
+        &lt;img class="boxFront" src="./pic/83" /&gt;
+        &lt;img class="boxWhite" src="/assets/images/shadow_card.png" /&gt;
+        &lt;img class="boxBack" src="/assets/images/back.jpg"  /&gt;
+    &lt;/a&gt;
+    &lt;img class="boxStretch" src="/assets/images/shim.gif" /&gt;
+&lt;/figure&gt;</pre>
+        The client side code governing the game mechanics is in a large JavaScript file 
+        /assets/javascripts/main.js, which looks very painful to work through. The source 
+        also contains a portion of JavaScript which determines behaviour and invites
+        manipulation:
+        <pre class="prettyprint lang-js">            
+window.game = S.game('.moduleLegespiel', {
+    clickCount : false,   //if clicks should be counted or not 
+                          //(one click represents a attempt of clicking a pair)
+    clickLimit : 3,       //limit of clicks
+    gameLimitTime : null, //if game has a limit of time in seconds, if null no limit
+    showOnStart : false,  //if the cards should be visible for the first time
+    startDelay : 1500
+});</pre>
+        The first idea (and probably the intended path) was to save a local copy of the page,
+        change showOnStart to True and clickLimit to 3000, and then to play with open cards.
+        Sadly, for some reason I cannot understand, this failed to work.
+      </p>
+      <p>
+        The next idea was to let a python script do the playing. Curiously, loading an image 
+        /pic/n (1 &lt;= n &lt;= 98) from the browser would invalidate the game, but doing 
+        so via a python script has no consequence. An oversight? Who knows ... <br>
+        For each round, the script loads all 98 images, computes their hashes and pairs 
+        them up automatically. Then, it submits every pair as a POST. 
+      </p>
+      <pre class="prettyprint lang-py">            
+import requests
+from PIL import Image
+import io
+from hashlib import md5
+
+url = "http://whale.hacking-lab.com:1111/"
+sess = requests.Session()
+headers = {
+    "Referer": "http://whale.hacking-lab.com:1111/",
+    "Host": "whale.hacking-lab.com:1111"
+}
+sess.headers.update(headers)
+
+for rnd in range(10):
+    # start round
+    req_root = sess.get(url)
+    for line in req_root.text.splitlines():
+        if line.strip().startswith('&lt;font color="grey">'):
+            print(line[21:-7]))
+
+    # load images and compute hashes
+    hash_list = []
+    for n in range(98):
+        req_img = sess.get(url + "pic/" + str(n+1))
+        img = Image.open(io.BytesIO(req_img.content))
+        img_hash = md5(img.tobytes()).hexdigest()
+        hash_list.append(img_hash)
+
+    # find pairs and submit
+    for n1 in range(98):
+        if hash_list[n1] is not None:
+            n2 = hash_list.index(hash_list[n1], n1+1)
+            payload = {"first": n1 + 1, "second": n2 + 1}
+            req_solve = sess.post(url + "solve", data=payload)
+            if req_solve.text != "ok":
+                print(req_solve.text)
+            hash_list[n1] = hash_list[n2] = None</pre>
+      <p>
+        After 10 rounds, out pops the flag:
+        <pre><code>
+          Round 1 / 10
+          nextRound
+          Round 2 / 10
+          nextRound
+          Round 3 / 10
+          nextRound
+          Round 4 / 10
+          nextRound
+          Round 5 / 10
+          nextRound
+          Round 6 / 10
+          nextRound
+          Round 7 / 10
+          nextRound
+          Round 8 / 10
+          nextRound
+          Round 9 / 10
+          nextRound
+          Round 10 / 10
+          ok, here is your flag: 1-m3m3-4-d4y-k33p5-7h3-d0c70r-4w4y
+        </code></pre>
+      </p>
+  </body>
+</html>

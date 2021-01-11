@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="green">Egg 5: Call for Papers</h2>
+    <p class="problem_green">
+      Please read and review my CFP document, for the upcoming IAPLI Symposium.
+      <br>
+      I didn't write it myself, but used some artificial intelligence.
+      <br>
+      What do you think about it?
+    </p>
+    <p>
+      The document <b>IAPLI_Conference.docx</b> attached to the challenge is 
+      supposed to be a call for papers (CFP) for a conference. The challenge
+      description and the mostly nonsensical contents of the document point 
+      towards text steganography. Staring at the text brings no illumination,
+      so additional evidence is needed. 
+    </p>
+    <img src="img/5e171aa074f390965a12fdc240.png" style="float:right; height:200px;">
+    <p>
+      docx documents are actually zip files in disguise. After changing the
+      extension to .zip, the document tree can be opened and examined.  
+      According to the challenge description, the document was written
+      by an AI. Which one? <b>IAPLI_conference &rarr; docProps &rarr; core.xml</b> 
+      names the document creator as <b>SCIpher</b>.
+    </p>
+    <p>
+      A search for SCIpher brings a number of interesting hits. My favourite is
+      <a href="go.nature.com/SCIPHER">SCIPHER</a> by nature magazine, "an AI 
+      construct created in a secret basement by the mavens of Nature's editorial 
+      team". Well worth the visit!!!
+    </p>
+    <p>
+      But sadly, that's not quite it ... the target is 
+      <a href="https://pdos.csail.mit.edu/archive/scigen/scipher.html">
+      SCIpher - A Scholarly Message Encoder</a> from MIT, also a fun read. 
+      To extract the secret message, all one needs to do is copy and past 
+      the document contents into the appropriate box. Out comes the address
+      of an egg: 
+      <b>https://hackyeaster.hacking-lab.com/hackyeaster/images/eggs/5e171aa074f390965a12fdc240.png</b> 
+    </p>
+  </body>
+</html>

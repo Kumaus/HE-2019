@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="green">Egg 9: rorriM rorriM</h2>
+    <p class="problem_green">Mirror, mirror, on the wall, who's the fairest of them all?</p>
+    <img src="img/egg09_corr.png" style="float:right; height:140px; margin-left:10px;">
+    <img src="img/egg09.png" style="float:right; height:140px; margin-left:10px;">
+    <p>
+      As the title promises, there are a number of mirror images to be performed. The 
+      file provided, <b>evihcra.piz</b>, needs to be read backwards (bytewise) to create a 
+      legitimate zip file, <b>archive.zip</b>. This contains a single file, <b>90gge.gnp</b>.
+    </p>
+    <p>
+      To my great surprise, 90gge.gnp is almost a legitimate PNG. Only the "magic bytes" 
+      at the start need to be reversed, from 89 47 4E 50 to 89 50 4E 47.
+    </p>
+    <p>
+      To round things off, the image needs to be flipped horizontally, and 
+      the colour table inverted.
+    </p>
+  </body>
+</html>

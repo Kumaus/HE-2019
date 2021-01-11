@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="blue">Egg 27: Hidden Egg 3</h2>
+      <p class="problem_blue">Sometimes, there is a hidden bonus level.</p>
+      <img src="img/ch27.jpg" style="float:right; height:140px; margin-left:10px;">
+      <p>
+        The background maze in the challenge picture is the same as for egg21 and egg22,
+        so let's have a look for a bonus level. On the travel navigator starting page,
+        there is an easy-to-miss button leading to a feedback page. 
+        There is an almost irresistible temptation to be nasty and give one star. Daring 
+        this results in a friendly kick in the ass and ... a flag!!
+        <pre>Flag: he19-YouT-u.be-TKN7-IvhY-H2M</pre>
+        Not entirely surprisingly, this fails to work. It does contain a link to a highly
+        relevant YouTube video though:
+        <a href="https://www.youtube.com/watch?v=TKN7IvhYH2M">YouTu.be TKN7IvhYH2M</a>
+      </p>
+      <img src="img/feedback.png" class="centered" width="700">
+      <img src="img/feedback_bad.png" class="centered" width="700">
+      <p>
+        After careful analysis of the video for hidden messages, another, less fun, feature 
+        of the feedback page asks to be used: a disabled button for <b>Orbit - upcoming</b>. 
+        We can't press it, but the request URL <pre>/feedback?path=3&stars=5</pre> works:
+      </p>
+      <img src="img/feedback_orbit.png" class="centered" width="700">
+      <p>
+        The links for path 1 and path 2 turn out to be MD5 hashes, and so we can create a 
+        similar one for path 3 after cracking them:
+      </p>
+      <table class="bordered">
+        <tr>
+          <td>Path 1</td>
+          <td>/1804161a0dabfdcd26f7370136e0f766</td>
+          <td>P4TH1</td>
+        </tr>
+        <tr>
+          <td>Path 2</td>
+          <td>/7fde33818c41a1089088aa35b301afd9</td>
+          <td>P4TH2</td>
+        </tr>
+        <tr>
+          <td>Path 3</td>
+          <td>/bf42fa858de6db17c6daa54c4d912230</td>
+          <td>P4TH3</td>
+        </tr>
+      </table>
+      <p>
+        Orbit mode it is ... we "only" need the two flags from egg21 and egg22. Of course they dont't
+        work straight off, they have to be placed in the opposite order first:
+      </p>
+      <img src="img/orbit.png" class="centered" width="700">
+      <p>
+        This finally lets us enter the orbit maze, with an interface remarkably like eggs 21 and 22.
+        The maze covers a 38x38 area and is ring-shaped.
+      </p>
+      <pre style="font-size: 12px">
+        +++++++++++++++++++++++++++++++++++++++++++++
+        +                                           +
+        + ######################################### +
+        + #X......................................# +
+        + #.......................................# +
+        + #..###################################..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..#                                 #..# +
+        + #..###################################..# +
+        + #..................................?....# +
+        + #.......................................# +
+        + ######################################### +
+        +                                           +
+        +++++++++++++++++++++++++++++++++++++++++++++
+      </pre>
+      <p>
+        When we reach the question mark, something strange happens:
+      </p>
+      <img src="img/placeholder.png" class="centered" width="700">
+      <p>
+        The flag may have been added to the session, but we can't get at it
+        without decrypting the cookie. A search for "app.crypto_key" leads to
+        a page offering python code for AES-256
+        <a href="https://github.com/SaintFlipper/EncryptedSession">Session Encryption</a>
+        in order to store user data in cookies. We are even given a key! A 
+        suspicious check in the page source shows that it contains some unprintable
+        characters ignored by HTML as a final trap. The completed key is:
+        <pre>
+            crypto_key: b'timeto\x01guess\x03a\x03last\x07time'
+        </pre>
+        The code below just uses the minimum and can decrypt all those long and 
+        mysterious session IDs from eggs 21 and 22. 
+      </p>
+      <pre class="prettyprint lang-py">
+from Crypto.Cipher import AES
+import base64
+import zlib
+import json
+
+session_cookie = "u.IHPD1ZL0x0UIs <span class="insert"> ... enter session ID here</span>"
+
+crypto_key = b'timeto\x01guess\x03a\x03last\x07time'
+
+# split cookie into components
+itup = session_cookie.split(".")
+
+# Decode the cookie parts from base64
+if itup[0] == 'z':
+    is_compressed = True
+else:
+    is_compressed = False
+ciphertext = base64.b64decode(itup[1])
+mac = base64.b64decode(itup[2])       # Used for verification, ignored here
+nonce = base64.b64decode(itup[3])
+
+# Decrypt
+cipher = AES.new(crypto_key, AES.MODE_EAX, nonce)
+data = cipher.decrypty(ciphertext)
+
+# Decompress if needed
+if is_compressed:
+    data = zlib.decompress(data)
+
+# Extract JSON
+session_dict = json.loads(data.decode())
+
+# pretty print
+print(json.dumps(session_dict, indent=4))</pre>
+      <p>
+        A nice long JSON is produced, which contains the key 
+        <pre><b>"hidden_flag": "he19-fmRW-T6Oj-uNoT-dzOm"</b></pre>
+      </p>
+  </body>
+</html>

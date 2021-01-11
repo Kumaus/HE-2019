@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+      <h2 class="yellow">Egg 16: Every-Thing</h2>
+      <p class="problem_yellow">
+        After the brilliant idea from 
+        <a href="http://geek-and-poke.com/geekandpoke/2013/7/22/future-proof-your-data-model">here</a>.<br>
+        The data model is stable and you can really store Every-Thing.
+      </p>
+      <img src="img/gdm.png" class="centered" width="500">
+      <p>
+        We are given <b>EveryThing.sql</b>, a 38MB MySQL dump file, to play with, which 
+        describes a very general data structure <b>Thing</b> exactly as in the cartoon above.  
+      </p>
+      <pre class="prettyprint lang-sql">
+-- MySQL dump 10.13  Distrib 5.7.25, for Linux (x86_64)
+--
+-- Host: 127.0.0.1    Database: he19thing
+-- ------------------------------------------------------
+-- Server version	5.7.25-0ubuntu0.18.04.2
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `Thing`
+--
+
+DROP TABLE IF EXISTS `Thing`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Thing` (
+  `id` binary(16) NOT NULL,
+  `ord` int(11) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `value` varchar(1024) DEFAULT NULL,
+  `pid` binary(16) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKfaem61vklu1cjw9ckunvpicgi` (`pid`),
+  CONSTRAINT `FKfaem61vklu1cjw9ckunvpicgi` FOREIGN KEY (`pid`) REFERENCES `Thing` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Thing`
+--
+
+LOCK TABLES `Thing` WRITE;
+/*!40000 ALTER TABLE `Thing` DISABLE KEYS */;
+INSERT INTO `Thing` VALUES
+      <span class="insert"> ... huge list of rows ...</span>
+/*!40000 ALTER TABLE `Thing` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2019-01-27 10:22:19
+      </pre>
+      <p>
+        Each Thing has a unique binary <b>'id'</b> acting as primary key, and it
+        can reference a parent Thing through the foreign key <b>'pid'</b>. Furthermore,
+        each Thing has a <b>'type'</b>, an integer order <b>'ord'</b> and a freely defined 
+        <b>'value'</b>.
+      </p>
+      <p>
+        The SQL dump itself is pretty unpleasant to handle. To read it, the normal approach 
+        would be to load it into MySQL. However, that seems to require setting up a server 
+        ... I could not find a leightweight solution to examine an SQL dump file. So I ended 
+        up writing my own rough and ready SQL parser. The first script reads the SQL values 
+        from the dump and collects them (gasp of horror) in a mundane python dictionary, 
+        which is then pickled for easy access. Care has to be taken to handle the rather 
+        special SQL escape codes correctly. 
+      </p>
+      <pre class="prettyprint lang-py">
+import pickle
+
+with open("EveryThing.sql", "rb") as fh:
+    raw = fh.readlines()
+
+def parse_binary(start, text):
+    if text[start] != 0x27:  # '
+        return None, start + len('NULL')
+    ind = start + 1
+    parse = bytearray()
+    c = text[ind]
+    while c != 0x27:    # '
+        # catch mySQL escape sequences
+        if c == 0x5C:   # \
+            ind += 1
+            c = text[ind]
+            if c == 0x30:    # 0
+                c = 0
+            elif c == 0x27:  # '
+                pass
+            elif c == 0x22:  # "
+                pass
+            elif c == 0x62:  # b
+                c = 0x08
+            elif c == 0x6e:  # n
+                c = 0x0A
+            elif c == 0x72:  # r
+                c = 0x0D
+            elif c == 0x74:  # t
+                c = 0x09
+            elif c == 0x5A:  # Z
+                c = 0x1A
+            elif c == 0x5C:  # \
+                pass
+            elif c == 0x25:  # %
+                parse.append(0x5C)
+            elif c == 0x5F:  # _
+                parse.append(0x5C)
+        parse.append(c)
+        ind += 1
+        try:
+            c = text[ind]
+        except IndexError:
+            print(parse)
+            raise
+    return bytes(parse), ind + 1
+
+def parse_str(start, text):
+    parse, ind = parse_binary(start, text)
+    if parse is None:
+        return None, ind
+    else:
+        return parse.decode(), ind
+
+def parse_int(start, text):
+    end = text.index(b',', start)
+    parse = text[start: end]
+    return int(parse), end
+
+line_start = len(b'INSERT INTO `Thing` VALUES (')
+line_end = len(b');\n')
+thing = dict()
+line_count = 0
+for line in raw:
+    if line.startswith(b'INSERT INTO'):
+        line = line.replace(b"_binary ", b"")
+        line_count += 1
+        print(line_count)
+        for row in line[line_start: -line_end].split(b'),('):
+            pos = 0
+            try:
+                r_id, pos = parse_binary(pos, row)
+                r_ord, pos = parse_int(pos + 1, row)
+                r_type, pos = parse_str(pos + 1, row)
+                r_value, pos = parse_str(pos + 1, row)
+                r_pid, pos = parse_binary(pos + 1, row)
+            except (ValueError, IndexError):
+                print(row)
+                raise
+            thing[r_id] = {"ord": r_ord, "type": r_type, "value": r_value, "pid": r_pid}
+
+print("Number of Things read:", len(thing))
+with open('thing.pickle', 'wb') as fh:
+    pickle.dump(thing, fh)          
+      </pre>
+      <p>
+        The pickled things can be nicely examined from a python command line. 
+        Some observations:
+        <ul>
+          <li>
+            The Database of Things is organized as a tree. There is only a single 
+            ROOT element with pid=NULL. Its id is b"tn$\x19b#In\x9d\x0b\xa9\xce\xb8'\x05\xc6".
+          </li>
+          <li>
+            The ord values are used to order groups of Things with the same parent, 
+            e.g. an address list. 
+          </li>
+          <li>
+            The following types appear:<br>
+            <code>
+                {'address.eyeColor', 'address.company', 'address.phone', 'png.ihdr', 'png.bkgd', 
+                'address.favoriteFruit', 'book.isbn', 'book.title', 'address.age', 'png.iend', 
+                'address.guid', 'book', 'png.time', 'address.registered', 'address', 'address.about', 
+                'bookshelf', 'png.idat', 'address.name', 'png.gama', 'png.chrm', 'address.greeting', 
+                'book.language', 'book.author', 'png', 'address.address', 'address.gender', 'ROOT', 
+                'galery', 'addressbook', 'book.url', 'png.text', 'book.year', 'png.head', 
+                'address.email', 'address.picture', 'shelf', 'png.phys'}
+            </code>
+          </li>
+        </ul>
+      </p>
+      <p>
+        There are a number of PNG structures and substructures which catch the eye.
+        Each has a single parent of type 'png' holding the name of the image. Below 
+        are a set of children, one for each PNG chunk, with ord giving their sequence.
+        Some larger chunk Things can have children of their own, storing portions of the 
+        chunk data if its length exceeds the varchar(1024) limit for a Things value.
+      </p>
+      <p>
+        An example: (columns are type, ord, number of children, value)
+        <pre>
+          png:  Me, walking through the wood
+                png.head:  0  0 iVBORw0KGgo=
+                png.ihdr:  1  0 AAAADUlIRFIAAAHgAAAB4AgGAAAAfdS+lQ==
+                png.bkgd:  2  0 AAAABmJLR0QA/wD/AP+gvaeT
+                png.phys:  3  0 AAAACXBIWXMAADRjAAA0YwFVm585
+                png.time:  4  0 AAAAB3RJTUUH4wEaDyUGVAxvKA==
+                png.idat:  5 11 11
+                png.idat:  6 11 11
+                png.idat:  7 11 11
+                png.idat:  8 11 11
+                png.idat:  9 11 11
+                png.idat: 10 11 11
+                png.idat: 11  5 5
+                png.iend: 12  0 AAAAAElFTkSuQmCC
+        </pre>
+      </p>
+      <p>
+        The script below collects all the PNG Things found in the DataThing and saves them 
+        into a directory for later perusal.
+      </p>
+      <pre class="prettyprint lang-py">
+import pickle
+import base64
+
+with open("thing.pickle", 'rb') as fh:
+    thing = pickle.load(fh)
+
+def find_children(t_id):
+    # list of all children, sorted by ord
+    children = sorted([(value['ord'], key) for key, value in thing.items() if value['pid'] == t_id])
+    return [c[1] for c in children]
+
+def find_type(t_type):
+    return [key for key, value in thing.items() if value['type'] == t_type]
+
+def root_trail(t_id):
+    trail = [t_id]
+    while thing[t_id]['pid'] is not None:
+        t_id = thing[t_id]['pid']
+        trail.append(t_id)
+    return trail
+
+# find PNG IDs
+png_list = find_type('png')
+
+# build PNGs
+for png in png_list:
+    print(thing[png]['value'])
+    img = bytearray()
+    for child in find_children(png):
+        grand_children = find_children(child)
+        print('\t', thing[child]['type'], thing[child]['ord'], len(grand_children), thing[child]['value'])
+        if len(grand_children) == 0:
+            img.extend(base64.b64decode(thing[child]['value']))
+        else:
+            for gc in grand_children:
+                img.extend(base64.b64decode(thing[gc]['value']))
+    with open('pngs/' + thing[png]['value'] + '.png', 'wb') as fh:
+        fh.write(img)            
+      </pre>
+      <p>
+        Not entirely surprisingly, the PNG Thing collection turns out to be a basket full
+        of easterThings, one of which is THE easterThing. 
+      </p>
+      <table>
+        <tr>
+          <td><img src="img/pngs/At the beach.png" width="70"></td>
+          <td><img src="img/pngs/Fantastic trail, but a dead end.png" width="70"></td>
+          <td><img src="img/pngs/A strange car.png" width="70"></td>
+          <td><img src="img/pngs/Local market.png" width="70"></td>
+          <td><img src="img/pngs/Me, walking through the wood.png" width="70"></td>
+          <td><img src="img/pngs/My first time on a SUP.png" width="70"></td>
+          <td><img src="img/pngs/My second time on a SUP.png" width="70"></td>
+          <td><img src="img/pngs/Nice sunset.png" width="70"></td>
+          <td><img src="img/pngs/The best dinner ever.png" width="70"></td>
+          <td><img src="img/pngs/The mountains.png" width="70"></td>
+          <td><img src="img/pngs/Very old steam boat.png" width="70"></td>
+        </tr>
+        <tr style="text-align: center; font-size: 10px">
+          <td>At the beach</td>
+          <td>Fantastic trail, <br>but a dead end</td>
+          <td>A strange <br>car</td>
+          <td>Local market</td>
+          <td>Me, walking <br>through the <br>wood</td>
+          <td>My first time <br>on a SUP</td>
+          <td>My second time <br>on a SUP</td>
+          <td>Nice sunset</td>
+          <td>The best <br>dinner ever</td>
+          <td>The mountains</td>
+          <td>Very old <br>steam boat</td>
+        </tr>
+      </table>
+  </body>
+</html>

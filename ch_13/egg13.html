@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../he19.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <title>Writeup: Hacky Easter 2019</title>
+  </head>
+  <body>
+    <h2 class="yellow">Egg 13: Symphony in HEX</h2>
+    <p class="problem_yellow">
+      A lost symphony of the genius has reappeared. <br>
+      Hint: count quavers, read semibreves
+    </p>
+    <img src="img/symphonyinhex.png" class="centered" width="800">
+    <p>
+      The first challenge is to understand the hint:
+      <ul>
+        <li>semibreve &rarr; whole note (hollow)</li>
+        <li>quaver &rarr; eighth note (full, one tail)</li>
+      </ul>
+      So, runs of quavers should be counted, and semibreves should be read, presumably according to 
+      the (musical) key used, the treble clef.
+    </p>
+    <img src="img/Treble-Clef.png" class="centered" width="700">
+    <p>
+      Following this recipe gives <b>48 41 43 4b 5f 4d 45 5f 4d 45 5f 41 4d 41 44 45 55 53</b>, which conveniently represents hex values of 
+      ASCII characters: <b>HACK_ME_AMADEUS</b>
+    </p>
+  </body>
+</html>
