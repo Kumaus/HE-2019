@@ -1,0 +1,77 @@
+.green {
+    background-color: #3bd889;
+    color: #ffffff;
+    padding: 8px;
+}
+.yellow {
+    background-color: #b6d83b;
+    color: #ffffff;
+    padding: 8px;
+}
+.red {
+    background-color: #c94f39;
+    color: #ffffff;
+    padding: 8px;
+}
+.blue {
+    background-color: #3b91d8;
+    color: #ffffff;
+    padding: 8px;
+}
+
+.problem_green {
+    background-color: #c6f0db;
+    font-size: 12pt;
+    font-style: italic;
+    padding: 4px;
+}
+.problem_yellow {
+    background-color: #ebf5c8;
+    font-size: 12pt;
+    font-style: italic;
+    padding: 4px;
+}
+.problem_red {
+    background-color: #fac4ba;
+    font-size: 12pt;
+    font-style: italic;
+    padding: 4px;
+}
+.problem_blue {
+    background-color: #adcce6;
+    font-size: 12pt;
+    font-style: italic;
+    padding: 4px;
+}
+
+table.bordered {
+    margin-left: 2cm;
+    border-collapse: collapse;
+}
+table.bordered td, th {
+    border: 1px solid black;
+    padding: 5px;
+    background-color: lightgray
+}
+table.bordered th {
+    background-color: #3b91d8
+}
+
+table.listing {
+    border-spacing:30px 0;
+}
+
+.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+pre.tbd {
+    background-color: rgb(253, 235, 129);
+}
+
+span.insert {
+    background-color: #c0c0c0;
+    color: black
+}
