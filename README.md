@@ -1,8 +1,8 @@
 # Hacky Easter 2019 writeup
 ## Hacking Lab
 
-Homepage: https://github.com/hackyeaster/he2019_writeup  \
-Writeup: https://kumaus.github.io/HE2019-writeup/
+Writeup: https://kumaus.github.io/HE-2019/  \
+Homepage: https://github.com/hackyeaster/he2019_writeup
 
 ![Deadly Rabbit](/logo.png)
 
